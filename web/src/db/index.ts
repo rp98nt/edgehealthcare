@@ -4,8 +4,20 @@ import * as schema from "./schema";
 
 let cached: ReturnType<typeof drizzle<typeof schema>> | null = null;
 
+function firstNonEmptyEnv(keys: string[]): string | undefined {
+  for (const key of keys) {
+    const v = process.env[key];
+    if (typeof v === "string" && v.trim().length > 0) return v;
+  }
+  return undefined;
+}
+
 function getConnectionString(): string | undefined {
-  return process.env.POSTGRES_URL ?? process.env.DATABASE_URL;
+  return firstNonEmptyEnv([
+    "POSTGRES_URL",
+    "DATABASE_URL",
+    "POSTGRES_PRISMA_URL",
+  ]);
 }
 
 /**
