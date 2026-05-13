@@ -8,6 +8,10 @@
  * Optional: BASE_URL=http://localhost:3000
  */
 import { config } from "dotenv";
+import {
+  sampleVitalsAbnormal,
+  sampleVitalsNormal,
+} from "../src/lib/demo/sampleVitals";
 
 config({ path: ".env.local" });
 config();
@@ -28,17 +32,9 @@ const scenario = process.env.SIMULATE_SCENARIO ?? "normal";
 
 function vitals() {
   if (scenario === "abnormal" || scenario === "critical") {
-    return {
-      heartRateBpm: 118,
-      temperatureC: 38.2,
-      spo2Pct: 91,
-    };
+    return sampleVitalsAbnormal();
   }
-  return {
-    heartRateBpm: 72 + Math.floor(Math.random() * 8),
-    temperatureC: 36.5 + Math.random() * 0.6,
-    spo2Pct: 96 + Math.floor(Math.random() * 3),
-  };
+  return sampleVitalsNormal();
 }
 
 async function tick() {

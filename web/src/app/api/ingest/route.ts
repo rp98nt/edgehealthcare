@@ -1,8 +1,5 @@
 import { NextResponse } from "next/server";
-import { eq } from "drizzle-orm";
-import { getDb } from "@/db";
-import { alerts, processingEvents, readings, users } from "@/db/schema";
-import { processVitals } from "@/lib/edge/processVitals";
+import { persistReading } from "@/lib/ingest/persistReading";
 import { ingestBodySchema } from "@/lib/schemas/ingest";
 
 export const runtime = "edge";
@@ -29,58 +26,25 @@ export async function POST(req: Request) {
   }
 
   const data = parsed.data;
-  const userRows = await getDb()
-    .select({ id: users.id })
-    .from(users)
-    .where(eq(users.id, data.userId))
-    .limit(1);
-  if (!userRows[0]) {
-    return NextResponse.json({ error: "Unknown userId" }, { status: 404 });
-  }
-
   const recordedAt = data.recordedAt ? new Date(data.recordedAt) : new Date();
-  const { status, reasons } = processVitals({
+  const result = await persistReading({
+    userId: data.userId,
     heartRateBpm: data.heartRateBpm,
     temperatureC: data.temperatureC,
     spo2Pct: data.spo2Pct,
+    bpSys: data.bpSys ?? null,
+    bpDia: data.bpDia ?? null,
+    recordedAt,
   });
 
-  const [reading] = await getDb()
-    .insert(readings)
-    .values({
-      userId: data.userId,
-      heartRateBpm: data.heartRateBpm,
-      temperatureC: data.temperatureC,
-      spo2Pct: data.spo2Pct,
-      bpSys: data.bpSys ?? null,
-      bpDia: data.bpDia ?? null,
-      status,
-      reasonsJson: JSON.stringify(reasons),
-      recordedAt,
-    })
-    .returning();
-
-  await getDb().insert(processingEvents).values({
-    userId: data.userId,
-    readingId: reading.id,
-    stage: "edge",
-    detail: JSON.stringify({ status, reasons }),
-  });
-
-  if (status === "critical" || status === "warning") {
-    await getDb().insert(alerts).values({
-      userId: data.userId,
-      readingId: reading.id,
-      severity: status,
-      message:
-        reasons.length > 0 ? reasons.join("; ") : `Automated status: ${status}`,
-    });
+  if (!result.ok) {
+    return NextResponse.json({ error: result.error }, { status: result.status });
   }
 
   return NextResponse.json({
     ok: true,
-    readingId: reading.id,
-    status,
-    reasons,
+    readingId: result.readingId,
+    status: result.status,
+    reasons: result.reasons,
   });
 }

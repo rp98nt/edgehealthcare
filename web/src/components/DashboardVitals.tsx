@@ -2,6 +2,9 @@
 
 import { useCallback, useEffect, useState } from "react";
 
+const POLL_MS = 4000;
+const SIM_INTERVAL_MS = 5000;
+
 type Reading = {
   id: string;
   heartRateBpm: number;
@@ -21,6 +24,8 @@ function statusStyle(s: string) {
 export function DashboardVitals() {
   const [readings, setReadings] = useState<Reading[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [simulateOn, setSimulateOn] = useState(false);
+  const [simMessage, setSimMessage] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -42,9 +47,40 @@ export function DashboardVitals() {
 
   useEffect(() => {
     void load();
-    const id = window.setInterval(() => void load(), 4000);
+    const id = window.setInterval(() => void load(), POLL_MS);
     return () => window.clearInterval(id);
   }, [load]);
+
+  const runSimTick = useCallback(async () => {
+    try {
+      const r = await fetch("/api/demo/simulate-tick", {
+        method: "POST",
+        credentials: "include",
+      });
+      if (r.status === 403) {
+        setSimMessage(
+          "Demo simulator is disabled. Set ENABLE_DEMO_SIMULATOR=1 (or true) in Vercel env, redeploy, then try again.",
+        );
+        setSimulateOn(false);
+        return;
+      }
+      if (!r.ok) {
+        setSimMessage(`Sim tick failed (${r.status}).`);
+        return;
+      }
+      setSimMessage(null);
+      await load();
+    } catch {
+      setSimMessage("Network error during sim tick.");
+    }
+  }, [load]);
+
+  useEffect(() => {
+    if (!simulateOn) return;
+    void runSimTick();
+    const id = window.setInterval(() => void runSimTick(), SIM_INTERVAL_MS);
+    return () => window.clearInterval(id);
+  }, [simulateOn, runSimTick]);
 
   const latest = readings[0];
 
@@ -54,14 +90,50 @@ export function DashboardVitals() {
         <div>
           <h1 className="text-2xl font-semibold text-slate-900">Dashboard</h1>
           <p className="mt-1 text-sm text-slate-600">
-            Vitals refresh every 4s (simulator + Edge ingest). Last 24 hours of
-            readings.
+            Vitals refresh every {POLL_MS / 1000}s. Optional in-app demo adds a
+            synthetic reading every {SIM_INTERVAL_MS / 1000}s (same rules as
+            Edge ingest).
           </p>
         </div>
-        <p className="text-xs text-slate-500">
-          Poll: <code className="rounded bg-slate-100 px-1">GET /api/readings</code>
-        </p>
+        <div className="flex flex-col items-end gap-2 sm:flex-row sm:items-center">
+          <button
+            type="button"
+            role="switch"
+            aria-checked={simulateOn}
+            aria-label="Simulate vitals every 5 seconds"
+            onClick={() => {
+              setSimMessage(null);
+              setSimulateOn((v) => !v);
+            }}
+            className={`relative inline-flex h-8 w-14 shrink-0 rounded-full border transition-colors ${
+              simulateOn
+                ? "border-sky-700 bg-sky-700"
+                : "border-slate-300 bg-slate-200"
+            }`}
+          >
+            <span
+              className={`absolute top-0.5 left-0.5 h-7 w-7 rounded-full bg-white shadow transition-transform ${
+                simulateOn ? "translate-x-6" : "translate-x-0"
+              }`}
+            />
+          </button>
+          <span className="text-xs text-slate-600">
+            Simulate vitals{" "}
+            <span className="font-medium text-slate-800">
+              ({simulateOn ? "on" : "off"})
+            </span>
+          </span>
+          <p className="text-xs text-slate-500">
+            <code className="rounded bg-slate-100 px-1">GET /api/readings</code>
+          </p>
+        </div>
       </div>
+
+      {simMessage ? (
+        <p className="rounded border border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-900">
+          {simMessage}
+        </p>
+      ) : null}
 
       {error ? (
         <p className="rounded border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-800">
@@ -98,7 +170,10 @@ export function DashboardVitals() {
           </div>
         </section>
       ) : !error ? (
-        <p className="text-slate-600">No readings yet. Run the simulator script.</p>
+        <p className="text-slate-600">
+          No readings yet. Turn on <strong>Simulate vitals</strong> (if enabled
+          on the server) or run <code className="rounded bg-slate-100 px-1">npm run simulate</code>.
+        </p>
       ) : null}
 
       {latest ? (

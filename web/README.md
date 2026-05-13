@@ -30,6 +30,8 @@ npm run simulate
 
 Use `SIMULATE_SCENARIO=abnormal` for warning/critical demos.
 
+For the **in-dashboard** synthetic stream, set `ENABLE_DEMO_SIMULATOR=1` in `.env.local` (or Vercel), redeploy, then use **Simulate vitals** on `/dashboard`.
+
 ## Scripts
 
 | Script | Purpose |
@@ -45,7 +47,7 @@ Use `SIMULATE_SCENARIO=abnormal` for warning/critical demos.
 ## Deploy (Vercel)
 
 1. Import this `web` folder as a Vercel project (root directory `web` if repo is parent).
-2. Add Storage → Postgres; set env vars in Vercel (`AUTH_SECRET`, `AUTH_URL`, `INGEST_API_KEY`, etc.).
+2. Add Storage → Postgres; set env vars in Vercel (`AUTH_SECRET`, `AUTH_URL`, `INGEST_API_KEY`, optional `ENABLE_DEMO_SIMULATOR=1` for the dashboard simulator toggle, etc.).
 3. Run `db:push` or migrate from CI/local against prod `POSTGRES_URL_NON_POOLING`.
 4. Optional Cron (Hobby: **once per day** only): set `CRON_SECRET` in Vercel; `vercel.json` runs `/api/cron/medication-rollover` daily at **00:00 UTC** — configure the job to send `Authorization: Bearer <CRON_SECRET>` (see [Vercel Cron docs](https://vercel.com/docs/cron-jobs)).
 
