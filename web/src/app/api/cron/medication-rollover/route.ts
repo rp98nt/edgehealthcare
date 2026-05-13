@@ -1,4 +1,4 @@
-import { eq, lt } from "drizzle-orm";
+import { lt } from "drizzle-orm";
 import { db } from "@/db";
 import { medications } from "@/db/schema";
 

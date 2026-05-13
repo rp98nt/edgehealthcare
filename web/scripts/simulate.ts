@@ -17,8 +17,12 @@ const key = process.env.INGEST_API_KEY;
 const userId = process.env.SIMULATE_USER_ID;
 const scenario = process.env.SIMULATE_SCENARIO ?? "normal";
 
-if (!key || !userId) {
-  console.error("Need INGEST_API_KEY and SIMULATE_USER_ID (run db:seed first).");
+if (typeof key !== "string" || key.length === 0) {
+  console.error("Need INGEST_API_KEY (run db:seed first).");
+  process.exit(1);
+}
+if (typeof userId !== "string" || userId.length === 0) {
+  console.error("Need SIMULATE_USER_ID (run db:seed first).");
   process.exit(1);
 }
 
