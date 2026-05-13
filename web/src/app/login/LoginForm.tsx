@@ -55,10 +55,6 @@ export function LoginForm() {
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-6">
       <h1 className="text-2xl font-semibold text-slate-900">Sign in</h1>
-      <p className="mt-2 text-sm text-slate-600">
-        Demo account after <code className="rounded bg-slate-100 px-1">db:seed</code>
-        .
-      </p>
       <form className="mt-8 flex flex-col gap-4" action={formAction}>
         <input type="hidden" name="callbackUrl" value={callbackUrl} />
         <label className="block text-sm">
