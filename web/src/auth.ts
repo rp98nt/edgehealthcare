@@ -15,12 +15,6 @@ declare module "next-auth" {
   }
 }
 
-declare module "next-auth/jwt" {
-  interface JWT {
-    role?: string;
-  }
-}
-
 export const { handlers, signIn, signOut, auth } = NextAuth({
   trustHost: true,
   session: { strategy: "jwt", maxAge: 60 * 60 * 24 * 7 },
@@ -59,15 +53,20 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   callbacks: {
     jwt({ token, user }) {
       if (user) {
-        token.sub = user.id;
-        token.role = user.role ?? "patient";
+        return {
+          ...token,
+          sub: user.id,
+          role: user.role ?? "patient",
+        };
       }
       return token;
     },
     session({ session, token }) {
       if (session.user && token.sub) {
         session.user.id = token.sub;
-        session.user.role = (token.role as string) ?? "patient";
+        const role = token.role;
+        session.user.role =
+          typeof role === "string" ? role : "patient";
       }
       return session;
     },
