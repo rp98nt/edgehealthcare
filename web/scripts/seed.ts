@@ -8,9 +8,13 @@ import * as schema from "../src/db/schema";
 config({ path: ".env.local" });
 config();
 
-const url = process.env.POSTGRES_URL;
+const url =
+  process.env.POSTGRES_URL ||
+  process.env.DATABASE_URL;
 if (!url) {
-  console.error("Set POSTGRES_URL in .env.local");
+  console.error(
+    "Set POSTGRES_URL or DATABASE_URL in .env.local (copy from Vercel → Storage if empty after vercel env pull).",
+  );
   process.exit(1);
 }
 

@@ -9,3 +9,4 @@ dist
 *.log
 drizzle/meta/*.json
 !drizzle/meta/_journal.json
+.vercel

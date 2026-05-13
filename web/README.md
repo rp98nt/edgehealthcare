@@ -13,7 +13,8 @@ Simulated **IoT vitals** → **Edge Route Handler** (`/api/ingest` + `lib/edge/p
 cd web
 npm install
 cp .env.example .env.local
-# Fill POSTGRES_URL, POSTGRES_URL_NON_POOLING (optional), AUTH_SECRET, AUTH_URL, INGEST_API_KEY
+# Fill secrets (or: npx vercel link --yes --scope travionlabs --project edgehealthcare, then npm run db:pull-env).
+# If Postgres vars are still empty, paste POSTGRES_URL from Vercel → Storage → your database.
 npm run db:push
 npm run db:seed
 # Paste printed user id into SIMULATE_USER_ID in .env.local
@@ -35,6 +36,7 @@ Use `SIMULATE_SCENARIO=abnormal` for warning/critical demos.
 |--------|---------|
 | `npm run dev` | Next.js dev |
 | `npm run build` / `start` | Production |
+| `npm run db:pull-env` | Pull Production env from Vercel into `.env.local` (needs `vercel link`) |
 | `npm run db:push` | Apply Drizzle schema to Postgres |
 | `npm run db:seed` | Demo user + sample rows |
 | `npm run simulate` | POST vitals to `/api/ingest` |
