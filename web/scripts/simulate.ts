@@ -12,19 +12,19 @@ import { config } from "dotenv";
 config({ path: ".env.local" });
 config();
 
-const base = process.env.BASE_URL ?? "http://localhost:3000";
-const key = process.env.INGEST_API_KEY;
-const userId = process.env.SIMULATE_USER_ID;
-const scenario = process.env.SIMULATE_SCENARIO ?? "normal";
+function envOrExit(name: string, hint: string): string {
+  const v = process.env[name];
+  if (typeof v !== "string" || v.length === 0) {
+    console.error(`${hint} (set ${name}; run db:seed for user id).`);
+    process.exit(1);
+  }
+  return v;
+}
 
-if (typeof key !== "string" || key.length === 0) {
-  console.error("Need INGEST_API_KEY (run db:seed first).");
-  process.exit(1);
-}
-if (typeof userId !== "string" || userId.length === 0) {
-  console.error("Need SIMULATE_USER_ID (run db:seed first).");
-  process.exit(1);
-}
+const base = process.env.BASE_URL ?? "http://localhost:3000";
+const key = envOrExit("INGEST_API_KEY", "Need INGEST_API_KEY");
+const userId = envOrExit("SIMULATE_USER_ID", "Need SIMULATE_USER_ID");
+const scenario = process.env.SIMULATE_SCENARIO ?? "normal";
 
 function vitals() {
   if (scenario === "abnormal" || scenario === "critical") {
