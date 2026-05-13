@@ -1,6 +1,6 @@
 import { desc, eq } from "drizzle-orm";
 import { auth } from "@/auth";
-import { db } from "@/db";
+import { getDb } from "@/db";
 import { alerts } from "@/db/schema";
 
 export async function GET() {
@@ -9,7 +9,7 @@ export async function GET() {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const rows = await db
+  const rows = await getDb()
     .select()
     .from(alerts)
     .where(eq(alerts.userId, session.user.id))
@@ -36,7 +36,7 @@ export async function PATCH(req: Request) {
   if (!body.id || typeof body.read !== "boolean") {
     return Response.json({ error: "Invalid body" }, { status: 400 });
   }
-  const updated = await db
+  const updated = await getDb()
     .update(alerts)
     .set({ read: body.read })
     .where(eq(alerts.id, body.id))

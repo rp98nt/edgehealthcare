@@ -1,6 +1,6 @@
 import { desc, eq } from "drizzle-orm";
 import { auth } from "@/auth";
-import { db } from "@/db";
+import { getDb } from "@/db";
 import { medications } from "@/db/schema";
 
 export async function GET() {
@@ -9,7 +9,7 @@ export async function GET() {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const rows = await db
+  const rows = await getDb()
     .select()
     .from(medications)
     .where(eq(medications.userId, session.user.id))

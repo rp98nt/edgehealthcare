@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { auth } from "@/auth";
-import { db } from "@/db";
+import { getDb } from "@/db";
 import { medications } from "@/db/schema";
 import {
   addMedication,
@@ -12,7 +12,7 @@ export default async function MedicationsPage() {
   const session = await auth();
   if (!session?.user?.id) return null;
 
-  const rows = await db
+  const rows = await getDb()
     .select()
     .from(medications)
     .where(eq(medications.userId, session.user.id));

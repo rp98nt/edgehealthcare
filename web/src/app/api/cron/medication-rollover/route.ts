@@ -1,5 +1,5 @@
 import { lt } from "drizzle-orm";
-import { db } from "@/db";
+import { getDb } from "@/db";
 import { medications } from "@/db/schema";
 
 /** Vercel Cron: report overdue medication rows (no automatic dose changes). */
@@ -11,7 +11,7 @@ export async function GET(req: Request) {
   }
 
   const now = new Date();
-  const overdue = await db
+  const overdue = await getDb()
     .select({ id: medications.id })
     .from(medications)
     .where(lt(medications.nextDueAt, now));

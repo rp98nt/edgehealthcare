@@ -1,6 +1,6 @@
 import { and, desc, eq, gte } from "drizzle-orm";
 import { auth } from "@/auth";
-import { db } from "@/db";
+import { getDb } from "@/db";
 import { readings } from "@/db/schema";
 
 export async function GET(req: Request) {
@@ -15,7 +15,7 @@ export async function GET(req: Request) {
     ? new Date(fromIso)
     : new Date(Date.now() - 24 * 60 * 60 * 1000);
 
-  const list = await db
+  const list = await getDb()
     .select()
     .from(readings)
     .where(

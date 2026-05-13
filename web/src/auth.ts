@@ -2,7 +2,7 @@ import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
-import { db } from "@/db";
+import { getDb } from "@/db";
 import { users } from "@/db/schema";
 import type { DefaultSession } from "next-auth";
 
@@ -29,7 +29,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null;
         const email = String(credentials.email);
-        const rows = await db
+        const rows = await getDb()
           .select()
           .from(users)
           .where(eq(users.email, email))

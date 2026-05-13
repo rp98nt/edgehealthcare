@@ -4,7 +4,7 @@ import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { auth } from "@/auth";
-import { db } from "@/db";
+import { getDb } from "@/db";
 import { medications } from "@/db/schema";
 
 const addSchema = z.object({
@@ -28,7 +28,7 @@ export async function addMedication(formData: FormData) {
     Date.now() + parsed.data.intervalHours * 60 * 60 * 1000,
   );
 
-  await db.insert(medications).values({
+  await getDb().insert(medications).values({
     userId: session.user.id,
     name: parsed.data.name,
     dosage: parsed.data.dosage,
@@ -42,7 +42,7 @@ export async function markMedicationTaken(id: string) {
   const session = await auth();
   if (!session?.user?.id) throw new Error("Unauthorized");
 
-  const rows = await db
+  const rows = await getDb()
     .select()
     .from(medications)
     .where(eq(medications.id, id))
@@ -53,7 +53,7 @@ export async function markMedicationTaken(id: string) {
   const nextDueAt = new Date(
     Date.now() + m.intervalHours * 60 * 60 * 1000,
   );
-  await db
+  await getDb()
     .update(medications)
     .set({ nextDueAt })
     .where(eq(medications.id, id));
@@ -64,7 +64,7 @@ export async function deleteMedication(id: string) {
   const session = await auth();
   if (!session?.user?.id) throw new Error("Unauthorized");
 
-  const rows = await db
+  const rows = await getDb()
     .select()
     .from(medications)
     .where(eq(medications.id, id))
@@ -72,7 +72,7 @@ export async function deleteMedication(id: string) {
   const m = rows[0];
   if (!m || m.userId !== session.user.id) throw new Error("Not found");
 
-  await db.delete(medications).where(eq(medications.id, id));
+  await getDb().delete(medications).where(eq(medications.id, id));
   revalidatePath("/medications");
 }
 

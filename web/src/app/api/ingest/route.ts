@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
-import { db } from "@/db";
+import { getDb } from "@/db";
 import { alerts, processingEvents, readings, users } from "@/db/schema";
 import { processVitals } from "@/lib/edge/processVitals";
 import { ingestBodySchema } from "@/lib/schemas/ingest";
@@ -29,7 +29,7 @@ export async function POST(req: Request) {
   }
 
   const data = parsed.data;
-  const userRows = await db
+  const userRows = await getDb()
     .select({ id: users.id })
     .from(users)
     .where(eq(users.id, data.userId))
@@ -45,7 +45,7 @@ export async function POST(req: Request) {
     spo2Pct: data.spo2Pct,
   });
 
-  const [reading] = await db
+  const [reading] = await getDb()
     .insert(readings)
     .values({
       userId: data.userId,
@@ -60,7 +60,7 @@ export async function POST(req: Request) {
     })
     .returning();
 
-  await db.insert(processingEvents).values({
+  await getDb().insert(processingEvents).values({
     userId: data.userId,
     readingId: reading.id,
     stage: "edge",
@@ -68,7 +68,7 @@ export async function POST(req: Request) {
   });
 
   if (status === "critical" || status === "warning") {
-    await db.insert(alerts).values({
+    await getDb().insert(alerts).values({
       userId: data.userId,
       readingId: reading.id,
       severity: status,
