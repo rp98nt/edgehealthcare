@@ -81,11 +81,9 @@
 | Password hashing | **@node-rs/argon2** (or **bcrypt**) | Used inside credentials flow |
 | Tests (dev) | **Vitest** | For `lib/edge` rules only |
 
-**Do not add for this project:** email APIs (e.g. Resend), Redis/Upstash, Inngest, Pusher/Ably/SSE vendors, Sentry/Vercel Analytics (optional later and off-plan), extra real-time libraries. **Notifications = DB + UI** only.
+**Do not add for this project:** email APIs (e.g. Resend), Redis/Upstash, Inngest, Pusher/Ably/SSE vendors, Sentry/Vercel Analytics (optional later and off-plan), extra real-time libraries, hosted ML/AI inference services. **Notifications = DB + UI** only. **Diagnosis in this demo is rule-based only** (`lib/edge/processVitals`), not learned models.
 
 **Rate limiting / abuse (without Redis):** **Strong random `INGEST_API_KEY`**; optional “low fixed QPS” only if you implement a tiny in-process guard (best-effort on serverless) or accept thesis-only traffic. Document reliance on **secret + HTTPS**.
-
-**ML stretch (optional):** keep **rule-based** first; any add-on should be **one** small artifact (e.g. inlined scoring function or tiny WASM)—skip new hosted AI/ML services unless explicitly justified later.
 
 **Local dev:** `next dev`; connect to the **same Neon database** (pooled URL for serverless) via env vars from **`vercel env pull`** into `.env.local`. Optional: create a **Neon development branch** from the dashboard for isolation; for minimal setup, **Preview** and **Production** can use separate Vercel env targets pointing at different branches if you want parity with `main` vs PRs.
 
@@ -101,10 +99,9 @@
 | **P3** | Dashboard + polling + thesis alignment page | 5–10 d |
 | **P4** | In-app alerts + medication + optional Vercel Cron | 3–7 d |
 | **P5** | Auth hardening, RBAC sketch, security headers, HTTPS (Vercel) | 3–6 d |
-| **P6** | Optional ML / extras | 4–10 d |
-| **P7** | Production Vercel + **Neon Postgres (free tier)** + previews + demo capture | 3–6 d |
+| **P6** | Production Vercel + **Neon Postgres (free tier)** + previews + demo capture | 3–6 d |
 
-\*Part-time; scale with availability. Run **P7** previews from **P3** onward.
+\*Part-time; scale with availability. Run **P6** previews from **P3** onward.
 
 ---
 
@@ -161,22 +158,15 @@ Rule examples: HR > 100, temp > 37.5 °C, SpO₂ < 95 (align with thesis draft).
 | P5.3 | Rotate/document **INGEST_API_KEY**; never commit | README |
 | P5.4 | `next.config` security headers | Document CSP trade-offs |
 
-### P6 — ML (optional)
+### P6 — Deploy
 | ID | Task | Output |
 |----|------|--------|
-| P6.1 | Dataset + license note | `doc/ML_DATASET.md` |
-| P6.2 | Train/score offline; document metrics | Optional artifact |
-| P6.3 | Node Route Handler or shared function | Fallback to rules |
-
-### P7 — Deploy
-| ID | Task | Output |
-|----|------|--------|
-| P7.1 | Vercel project + Git | Preview + prod |
-| P7.2 | One Next deploy (all routes) | Healthy URL |
-| P7.3 | **Vercel Postgres (Neon)** wired in dashboard + migrate | Prod/preview schema on free tier |
-| P7.4 | Vercel Cron (if used) + `CRON_SECRET` | Overdue sweeps |
-| P7.5 | Low-rate simulator smoke test | E2E check |
-| P7.6 | `doc/demo/` recording + screenshots | Offline backup |
+| P6.1 | Vercel project + Git | Preview + prod |
+| P6.2 | One Next deploy (all routes) | Healthy URL |
+| P6.3 | **Vercel Postgres (Neon)** wired in dashboard + migrate | Prod/preview schema on free tier |
+| P6.4 | Vercel Cron (if used) + `CRON_SECRET` | Overdue sweeps |
+| P6.5 | Low-rate simulator smoke test | E2E check |
+| P6.6 | `doc/demo/` recording + screenshots | Offline backup |
 
 ---
 
@@ -246,9 +236,9 @@ Protected Route Handlers use **Auth.js `auth()` as a wrapper** so `req.auth` is 
 
 | Risk | Mitigation |
 |------|------------|
-| Scope creep | Ship rules + UI first; ML as P6 only |
+| Scope creep | Ship rules + UI first; defer non-essential features |
 | “Where is edge?” | Show Edge `route.ts` + diagram + Vercel Edge docs |
-| Edge can’t use DB driver | Spike early; narrow Edge to validate+score, Node handler to persist if required |
+| Edge can’t use DB driver | Spike early; narrow Edge to validate + rule evaluation, Node handler to persist if required |
 | Demo flake | Short recording in `doc/demo/` |
 | Neon **free tier** limits (storage, branches, compute) | Keep vitals retention small; one dev branch or shared Preview DB; check current limits before demo week |
 | Weak “security story” | Auth.js, HTTPS, RBAC sketch, ingest secret—no PHI claims |
@@ -262,7 +252,7 @@ Protected Route Handlers use **Auth.js `auth()` as a wrapper** so `req.auth` is 
 | IoT | Simulator → ingest API |
 | Edge | Edge Route Handler + `lib/edge` |
 | Cloud | **Neon Postgres (Vercel Postgres)** + Server Actions / Route Handlers |
-| Diagnosis | Rules (+ optional small ML) |
+| Diagnosis | Rule-based vital thresholds → status |
 | Alerts | DB + **in-app** UI only |
 | Medication | CRUD + UI + optional Cron |
 | Security | Auth.js, TLS, RBAC, ingest key |
@@ -271,7 +261,7 @@ Protected Route Handlers use **Auth.js `auth()` as a wrapper** so `req.auth` is 
 
 ## 12. First three actions
 
-1. Bootstrap Next.js and connect **Vercel** (P0.1 + start P7.1).
+1. Bootstrap Next.js and connect **Vercel** (P0.1 + start P6.1).
 2. In Vercel **Storage**, create **Postgres (Neon)** on the **free tier**; run Drizzle schema + migration + seed against **non-pooling** URL for migrate, **pooled** URL for the app (P1).
 3. Edge ingest + `processVitals` + one chart + polling client (P2 + P3.2).
 
