@@ -1,34 +1,13 @@
 "use client";
 
-import { signIn } from "next-auth/react";
+import { signInAction } from "@/app/actions/auth";
 import { useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useActionState } from "react";
 
 export function LoginForm() {
   const search = useSearchParams();
   const callbackUrl = search.get("callbackUrl") ?? "/dashboard";
-  const [email, setEmail] = useState("demo@local.test");
-  const [password, setPassword] = useState("demo-demo-demo");
-  const [error, setError] = useState<string | null>(null);
-  const [pending, setPending] = useState(false);
-
-  async function onSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setError(null);
-    setPending(true);
-    const res = await signIn("credentials", {
-      email,
-      password,
-      redirect: false,
-      callbackUrl,
-    });
-    setPending(false);
-    if (res?.error) {
-      setError("Invalid email or password.");
-      return;
-    }
-    window.location.href = callbackUrl;
-  }
+  const [state, formAction, pending] = useActionState(signInAction, undefined);
 
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-6">
@@ -37,14 +16,15 @@ export function LoginForm() {
         Demo account after <code className="rounded bg-slate-100 px-1">db:seed</code>
         .
       </p>
-      <form onSubmit={onSubmit} className="mt-8 flex flex-col gap-4">
+      <form className="mt-8 flex flex-col gap-4" action={formAction}>
+        <input type="hidden" name="callbackUrl" value={callbackUrl} />
         <label className="block text-sm">
           <span className="text-slate-700">Email</span>
           <input
             className="mt-1 w-full rounded border border-slate-300 px-3 py-2"
             type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            name="email"
+            defaultValue="demo@local.test"
             autoComplete="username"
           />
         </label>
@@ -53,14 +33,14 @@ export function LoginForm() {
           <input
             className="mt-1 w-full rounded border border-slate-300 px-3 py-2"
             type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            name="password"
+            defaultValue="demo-demo-demo"
             autoComplete="current-password"
           />
         </label>
-        {error ? (
+        {state?.error ? (
           <p className="text-sm text-red-700" role="alert">
-            {error}
+            {state.error}
           </p>
         ) : null}
         <button
