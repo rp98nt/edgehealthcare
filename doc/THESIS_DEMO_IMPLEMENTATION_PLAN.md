@@ -217,6 +217,18 @@ INGEST_API_KEY=
 CRON_SECRET=
 ```
 
+### 8.2 Auth.js in production (session + protected APIs)
+
+Protected Route Handlers use **Auth.js `auth()` as a wrapper** so `req.auth` is bound to the **incoming request** (plain `await auth()` inside handlers can miss cookies on Vercel and return 401 while the UI loads).
+
+**Vercel Production checklist:**
+
+1. **`AUTH_SECRET`** — set a long random value; **do not rotate** before demos without clearing cookies.
+2. **`AUTH_URL`** — set to the **exact** canonical site URL with no trailing slash, e.g. `https://your-app.vercel.app`. Wrong origin breaks OAuth/callback-style flows and cookie scope for Auth.js v5.
+3. **`POSTGRES_URL`** (or **`DATABASE_URL`**) — pooled URL for the running app.
+4. After changing **`AUTH_SECRET`** or **`AUTH_URL`**, **clear site cookies** and sign in again.
+5. Client **`fetch`** to same-origin APIs must use **`credentials: "include"`** (or default for same-origin GET in browsers, but explicit is safer for polling components).
+
 ---
 
 ## 9. Demo script

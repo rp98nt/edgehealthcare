@@ -47,6 +47,8 @@ Use `SIMULATE_SCENARIO=abnormal` for warning/critical demos.
 3. Run `db:push` or migrate from CI/local against prod `POSTGRES_URL_NON_POOLING`.
 4. Optional Cron (Hobby: **once per day** only): set `CRON_SECRET` in Vercel; `vercel.json` runs `/api/cron/medication-rollover` daily at **00:00 UTC** — configure the job to send `Authorization: Bearer <CRON_SECRET>` (see [Vercel Cron docs](https://vercel.com/docs/cron-jobs)).
 
+**Auth troubleshooting (production):** In Vercel **Production**, set **`AUTH_SECRET`** and **`AUTH_URL`** to your **exact** deployment URL (no trailing slash), e.g. `https://edgehealthcare.vercel.app`. If the dashboard shows “signed out” or `/api/readings` returns **401** while you appear logged in, fix **`AUTH_URL`**, redeploy, **clear cookies** for the site, and sign in again. See `../doc/THESIS_DEMO_IMPLEMENTATION_PLAN.md` §8.2.
+
 ## Demo login
 
 After seed: **demo@local.test** / **demo-demo-demo**

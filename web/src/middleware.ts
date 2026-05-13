@@ -8,10 +8,17 @@ export default auth((req) => {
   return NextResponse.redirect(login);
 });
 
+/**
+ * Include exact paths (e.g. `/dashboard`) — some matchers only match `/dashboard/...`
+ * and can skip the bare `/dashboard` segment on certain Next.js versions.
+ */
 export const config = {
   matcher: [
+    "/dashboard",
     "/dashboard/:path*",
+    "/medications",
     "/medications/:path*",
+    "/alerts",
     "/alerts/:path*",
   ],
 };

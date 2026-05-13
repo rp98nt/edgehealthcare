@@ -3,8 +3,9 @@ import { auth } from "@/auth";
 import { getDb } from "@/db";
 import { readings } from "@/db/schema";
 
-export async function GET(req: Request) {
-  const session = await auth();
+/** Use `auth()` wrapper so the session is read from this request (fixes 401 on `/api/readings` in production). */
+export const GET = auth(async (req) => {
+  const session = req.auth;
   if (!session?.user?.id) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -35,4 +36,4 @@ export async function GET(req: Request) {
       recordedAt: r.recordedAt.toISOString(),
     })),
   });
-}
+});

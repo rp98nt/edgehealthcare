@@ -24,7 +24,10 @@ export function DashboardVitals() {
 
   const load = useCallback(async () => {
     try {
-      const r = await fetch("/api/readings", { cache: "no-store" });
+      const r = await fetch("/api/readings", {
+        cache: "no-store",
+        credentials: "include",
+      });
       if (!r.ok) {
         setError(r.status === 401 ? "Signed out" : "Could not load readings");
         return;

@@ -3,8 +3,8 @@ import { auth } from "@/auth";
 import { getDb } from "@/db";
 import { alerts } from "@/db/schema";
 
-export async function GET() {
-  const session = await auth();
+export const GET = auth(async (req) => {
+  const session = req.auth;
   if (!session?.user?.id) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -25,10 +25,10 @@ export async function GET() {
       createdAt: a.createdAt.toISOString(),
     })),
   });
-}
+});
 
-export async function PATCH(req: Request) {
-  const session = await auth();
+export const PATCH = auth(async (req) => {
+  const session = req.auth;
   if (!session?.user?.id) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -45,4 +45,4 @@ export async function PATCH(req: Request) {
     return Response.json({ error: "Not found" }, { status: 404 });
   }
   return Response.json({ ok: true });
-}
+});

@@ -16,7 +16,10 @@ export default function AlertsPage() {
 
   const load = useCallback(async () => {
     try {
-      const r = await fetch("/api/alerts", { cache: "no-store" });
+      const r = await fetch("/api/alerts", {
+        cache: "no-store",
+        credentials: "include",
+      });
       if (!r.ok) {
         setError("Could not load alerts");
         return;
@@ -39,6 +42,7 @@ export default function AlertsPage() {
     await fetch("/api/alerts", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
+      credentials: "include",
       body: JSON.stringify({ id, read }),
     });
     void load();
